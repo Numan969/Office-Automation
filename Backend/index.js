@@ -121,6 +121,7 @@ const createAdminUser = async () => {
         userType: "director",
         isAdmin: true,
       });
+      // This is a test commit
       await adminUser.save();
       console.log("Admin registered successfully.");
     }

@@ -1,0 +1,61 @@
+name: Deploy Frontend & Backend to Vercel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # 🧩 FRONTEND BUILD
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      # 🧩 BACKEND BUILD (Express)
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Build backend (if needed)
+        working-directory: ./backend
+        run: |
+          if [ -f package.json ] && grep -q "\"build\"" package.json; then
+            npm run build
+          else
+            echo "No backend build script found, skipping..."
+          fi
+
+      # 🚀 DEPLOY FRONTEND
+      - name: Deploy frontend to Vercel
+        working-directory: ./frontend
+        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm --scope ${{ secrets.VERCEL_ORG_ID }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      # 🚀 DEPLOY BACKEND
+      - name: Deploy backend to Vercel
+        working-directory: ./backend
+        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm --scope ${{ secrets.VERCEL_ORG_ID }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_BACKEND }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
